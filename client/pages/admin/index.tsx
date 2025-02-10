@@ -59,8 +59,7 @@ const AdminDashboard = () => {
       await api.post("/admin/approve_user", { username });
       setMessage(`User ${username} approved`);
       setError("");
-      // Refresh the user list
-      fetchPendingUsers();
+      fetchAllData();
     } catch (err: any) {
       setError(`Failed to approve ${username}`);
       setMessage("");
