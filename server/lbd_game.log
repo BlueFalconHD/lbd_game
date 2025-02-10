@@ -1,31 +1,24 @@
-2025/02/10 09:38:06 Starting LBD Game Server
-2025/02/10 09:38:06 Admin count: 0
-2025/02/10 09:38:07 Default admin created with username 'admin' and password 'adminpass'
-2025/02/10 09:38:07 Phrase submission will open at 7:37AM
-2025/02/10 09:38:07 Daily reset scheduled at midnight
-2025/02/10 09:38:07 Phrase submission is now open!
-2025/02/10 09:39:14 Starting LBD Game Server
-2025/02/10 09:39:14 Admin count: 1
-2025/02/10 09:39:14 Phrase submission will open at 7:05AM
-2025/02/10 09:39:14 Daily reset scheduled at midnight
-2025/02/10 09:39:14 Phrase submission is now open!
-2025/02/10 09:39:21 Starting LBD Game Server
-2025/02/10 09:39:21 Admin count: 1
-2025/02/10 09:39:21 Phrase submission will open at 7:47AM
-2025/02/10 09:39:21 Daily reset scheduled at midnight
-2025/02/10 09:39:21 Phrase submission is now open!
-2025/02/10 09:39:24 Starting LBD Game Server
-2025/02/10 09:39:24 Admin count: 1
-2025/02/10 09:39:24 Phrase submission will open at 7:30AM
-2025/02/10 09:39:24 Daily reset scheduled at midnight
-2025/02/10 09:39:24 Phrase submission is now open!
-2025/02/10 09:39:27 Admin 'admin' logged in
-2025/02/10 09:40:54 Phrase submitted by user 'admin': This is the daily phrase.
-2025/02/10 10:06:33 Admin count: 1
-2025/02/10 10:06:33 Phrase submission will open at 7:18AM
-2025/02/10 10:06:33 Daily reset scheduled at midnight
-2025/02/10 10:06:33 Phrase submission is now open!
-2025/02/10 10:06:38 Admin count: 1
-2025/02/10 10:06:38 Phrase submission will open at 7:29AM
-2025/02/10 10:06:38 Daily reset scheduled at midnight
-2025/02/10 10:06:38 Phrase submission is now open!
+2025/02/10 13:32:07 Default admin created with username 'admin' and password 'adminpass'
+2025/02/10 13:32:07 Phrase submission will open at 7:46AM
+2025/02/10 13:32:07 Daily reset scheduled at midnight
+2025/02/10 13:32:07 Phrase submission is now open!
+2025/02/10 13:32:58 New user registered: user1
+2025/02/10 13:33:16 User 'admin' logged in
+2025/02/10 13:41:18 Phrase submission will open at 7:09AM
+2025/02/10 13:41:18 Daily reset scheduled at midnight
+2025/02/10 13:41:18 Phrase submission is now open!
+2025/02/10 13:41:58 User 'admin' logged in
+2025/02/10 13:42:50 User 'admin' logged in
+2025/02/10 13:43:09 Phrase submitted by user 'admin': This is the daily phrase.
+2025/02/10 13:45:01 Phrase submission will open at 5:46AM
+2025/02/10 13:45:01 Daily reset scheduled at midnight
+2025/02/10 13:45:01 Phrase submission is now open!
+2025/02/10 13:52:22 New user registered: oerson
+2025/02/10 13:52:33 User 'admin' logged in
+2025/02/10 14:00:51 User 'user1' approved by admin
+2025/02/10 14:00:52 User 'oerson' approved by admin
+2025/02/10 14:05:02 User 'admin' logged in
+2025/02/10 14:09:57 User 'admin' confirmed phrase usage for 'user1'
+2025/02/10 14:19:34 User 'admin' confirmed phrase usage for 'oerson'
+2025/02/10 14:29:09 User 'admin' logged in
+2025/02/10 14:32:25 New user registered: Hayes

@@ -1,3 +1,5 @@
+// main.go
+
 package main
 
 import (
@@ -13,11 +15,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"github.com/gin-contrib/cors"
+ 	// "encoding/base64"
+
 )
 
 var (
     db                     *gorm.DB
-    jwtKey                 = []byte("abcdefg") // Change this to a secure key
+    jwtKey                 = []byte("your_secret_key") // Change this to a secure key
     phraseSubmissionOpen   bool
     phraseSubmissionTime   time.Time
     currentPhrase          Phrase
@@ -32,13 +37,14 @@ type User struct {
     Password    string `gorm:"not null"`
     IsApproved  bool   `gorm:"default:false"`
     IsEliminated bool   `gorm:"default:false"`
+    IsAdmin	    bool   `gorm:"default:false"`
 }
 
-type Admin struct {
-    ID       uint   `gorm:"primaryKey"`
-    Username string `gorm:"unique;not null"`
-    Password string `gorm:"not null"`
-}
+// type Admin struct {
+//     ID       uint   `gorm:"primaryKey"`
+//     Username string `gorm:"unique;not null"`
+//     Password string `gorm:"not null"`
+// }
 
 type Phrase struct {
     ID            uint      `gorm:"primaryKey"`
@@ -66,7 +72,6 @@ func main() {
     initLogging()
     defer logFile.Close()
 
-
     // Initialize the database and schedule submission time
     initDatabase()
     schedulePhraseSubmission()
@@ -74,36 +79,47 @@ func main() {
     // Initialize Gin router
     router := gin.Default()
 
-    router.LoadHTMLGlob("templates/*")
-    router.Static("/static", "./static")
+    // CORS configuration
+    config := cors.Config{
+        AllowOrigins:     []string{"http://localhost:3000"}, // Frontend origin
+        AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+        AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+        ExposeHeaders:    []string{"Content-Length"},
+        AllowCredentials: true,
+        MaxAge:           12 * time.Hour,
+    }
+
+    router.Use(cors.New(config))
 
     // Public routes
     router.POST("/register", registerUser)
     router.POST("/login", loginUser)
 
-    // Admin routes
-    adminRoutes := router.Group("/admin")
-    {
-        adminRoutes.Use(authMiddleware(true))
-
-        adminRoutes.POST("/approve_user", approveUser)
-        adminRoutes.POST("/register_admin", registerAdmin)
-    }
-
-    // Protected user routes
     userRoutes := router.Group("/user")
     {
         userRoutes.Use(authMiddleware(false))
         userRoutes.GET("/status", getUserStatus)
         userRoutes.POST("/submit_phrase", submitPhrase)
         userRoutes.POST("/confirm_usage", confirmPhraseUsage)
+        userRoutes.GET("/phrase", getCurrentPhrase)
+        userRoutes.GET("/verification_status", getVerificationStatus)
+        userRoutes.GET("/active_users", getActiveUsers)
+        userRoutes.GET("/verifications", getTodaysVerifications)
+    }
+
+    // Additional route for admin
+    adminRoutes := router.Group("/admin")
+    {
+        adminRoutes.Use(authMiddleware(true))
+        adminRoutes.POST("/approve_user", approveUser)
+        adminRoutes.POST("/register_admin", registerAdmin)
+        adminRoutes.GET("/pending_users", getPendingUsers)
     }
 
     // Start the server
     router.Run(":8080")
 }
 
-// Initialize Logging
 func initLogging() {
     var err error
     logFile, err = os.OpenFile("lbd_game.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
@@ -121,25 +137,23 @@ func initDatabase() {
     }
 
     // Migrate schema
-    db.AutoMigrate(&User{}, &Admin{}, &Phrase{}, &PhraseUsage{})
+    db.AutoMigrate(&User{}, &Phrase{}, &PhraseUsage{})
 
     // Create default admin if not exists
-    var adminCount int64
-    db.Model(&Admin{}).Count(&adminCount)
-
-    log.Println("Admin count:", adminCount)
-    if adminCount == 0 {
+    var admin User
+    if err := db.Where("username = ?", "admin").First(&admin).Error; err != nil {
         passwordHash, _ := bcrypt.GenerateFromPassword([]byte("adminpass"), bcrypt.DefaultCost)
-        admin := Admin{
-            Username: "admin",
-            Password: string(passwordHash),
+        admin = User{
+            Username:   "admin",
+            Password:   string(passwordHash),
+            IsApproved: true,
+            IsAdmin:    true,
         }
         db.Create(&admin)
         log.Println("Default admin created with username 'admin' and password 'adminpass'")
     }
 }
 
-// Schedule Phrase Submission
 func schedulePhraseSubmission() {
     now := time.Now()
     year, month, day := now.Date()
@@ -172,7 +186,6 @@ func schedulePhraseSubmission() {
     }
 }
 
-// Daily Reset Function
 func dailyReset() {
     log.Println("Performing daily reset")
 
@@ -215,7 +228,6 @@ func dailyReset() {
     log.Println("Daily reset complete")
 }
 
-// Authentication Middleware
 func authMiddleware(requireAdmin bool) gin.HandlerFunc {
     return func(c *gin.Context) {
         tokenString := c.GetHeader("Authorization")
@@ -235,11 +247,21 @@ func authMiddleware(requireAdmin bool) gin.HandlerFunc {
             return
         }
 
-        if requireAdmin && !claims.IsAdmin {
+        var user User
+        if err := db.First(&user, claims.UserID).Error; err != nil {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+            c.Abort()
+            return
+        }
+
+        if requireAdmin && !user.IsAdmin {
             c.JSON(http.StatusForbidden, gin.H{"error": "Admin access required"})
             c.Abort()
             return
         }
+
+        // Update claims with latest IsAdmin status
+        claims.IsAdmin = user.IsAdmin
 
         c.Set("userID", claims.UserID)
         c.Set("username", claims.Username)
@@ -249,7 +271,80 @@ func authMiddleware(requireAdmin bool) gin.HandlerFunc {
     }
 }
 
-// Register User
+func getPendingUsers(c *gin.Context) {
+    var users []User
+    db.Where("is_approved = ?", false).Find(&users)
+
+    var userList []gin.H
+    for _, user := range users {
+        userList = append(userList, gin.H{"username": user.Username})
+    }
+
+    c.JSON(http.StatusOK, gin.H{"users": userList})
+}
+
+func getTodaysVerifications(c *gin.Context) {
+    today := time.Now().Truncate(24 * time.Hour)
+
+    var usages []PhraseUsage
+    db.Where("date = ?", today).Find(&usages)
+
+    var verifications []gin.H
+    for _, usage := range usages {
+        var user, confirmer User
+        db.First(&user, usage.UserID)
+        db.First(&confirmer, usage.ConfirmedByUserID)
+
+        verifications = append(verifications, gin.H{
+            "userId":      user.ID,
+            "username":    user.Username,
+            "confirmedBy": confirmer.Username,
+        })
+    }
+
+    c.JSON(http.StatusOK, gin.H{"verifications": verifications})
+}
+
+func getVerificationStatus(c *gin.Context) {
+    userIDRaw, _ := c.Get("userID")
+    userID := userIDRaw.(uint)
+    today := time.Now().Truncate(24 * time.Hour)
+
+    var usage PhraseUsage
+    result := db.Where("user_id = ? AND date = ?", userID, today).First(&usage)
+    if result.Error != nil {
+        c.JSON(http.StatusOK, gin.H{
+            "verified":   false,
+            "verified_by": "",
+        })
+        return
+    }
+
+    var verifier User
+    db.First(&verifier, usage.ConfirmedByUserID)
+
+    c.JSON(http.StatusOK, gin.H{
+        "verified":   true,
+        "verified_by": verifier.Username,
+    })
+}
+
+func getActiveUsers(c *gin.Context) {
+    userIDRaw, _ := c.Get("userID")
+    currentUserID := userIDRaw.(uint)
+    var users []User
+    db.Where("is_eliminated = ? AND is_approved = ?", false, true).Find(&users)
+
+    var userList []gin.H
+    for _, user := range users {
+        if user.ID != currentUserID {
+            userList = append(userList, gin.H{"username": user.Username})
+        }
+    }
+
+    c.JSON(http.StatusOK, gin.H{"users": userList})
+}
+
 func registerUser(c *gin.Context) {
     var input struct {
         Username string `json:"username" binding:"required"`
@@ -270,6 +365,7 @@ func registerUser(c *gin.Context) {
         Username:   input.Username,
         Password:   string(passwordHash),
         IsApproved: false, // Needs admin approval
+        IsAdmin:    false, // Regular user
     }
     if err := db.Create(&user).Error; err != nil {
         c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
@@ -280,8 +376,6 @@ func registerUser(c *gin.Context) {
     c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully. Awaiting admin approval."})
 }
 
-// Login User
-// Login User or Admin
 func loginUser(c *gin.Context) {
     var input struct {
         Username string `json:"username" binding:"required"`
@@ -292,60 +386,36 @@ func loginUser(c *gin.Context) {
         return
     }
 
-    var isAdmin bool
-    var userID uint
-    var username string
-
-    // Attempt to find user in the Users table
+    // Check if user exists
     var user User
-    if err := db.Where("username = ?", input.Username).First(&user).Error; err == nil {
-        // Compare passwords
-        if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
-            return
-        }
+    if err := db.Where("username = ?", input.Username).First(&user).Error; err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
+        return
+    }
 
-        if !user.IsApproved {
-            c.JSON(http.StatusForbidden, gin.H{"error": "Account not approved by admin"})
-            return
-        }
+    // Compare passwords
+    if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
+        return
+    }
 
-        if user.IsEliminated {
-            c.JSON(http.StatusForbidden, gin.H{"error": "You have been eliminated"})
-            return
-        }
+    if !user.IsApproved && !user.IsAdmin {
+        c.JSON(http.StatusForbidden, gin.H{"error": "Account not approved by admin"})
+        return
+    }
 
-        isAdmin = false
-        userID = user.ID
-        username = user.Username
-
-    } else {
-        // If not found in Users table, attempt to find in Admins table
-        var admin Admin
-        if err := db.Where("username = ?", input.Username).First(&admin).Error; err == nil {
-            // Compare passwords
-            if err := bcrypt.CompareHashAndPassword([]byte(admin.Password), []byte(input.Password)); err != nil {
-                c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
-                return
-            }
-
-            isAdmin = true
-            userID = admin.ID
-            username = admin.Username
-
-        } else {
-            // User not found in either table
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
-            return
-        }
+    if user.IsEliminated {
+        c.JSON(http.StatusForbidden, gin.H{"error": "You have been eliminated"})
+        return
     }
 
     // Generate token
     expirationTime := time.Now().Add(24 * time.Hour)
+
     claims := &Claims{
-        UserID:   userID,
-        Username: username,
-        IsAdmin:  isAdmin,
+        UserID:   user.ID,
+        Username: user.Username,
+        IsAdmin:  user.IsAdmin,
         StandardClaims: jwt.StandardClaims{
             ExpiresAt: expirationTime.Unix(),
         },
@@ -358,15 +428,10 @@ func loginUser(c *gin.Context) {
         return
     }
 
-    if isAdmin {
-        log.Printf("Admin '%s' logged in", username)
-    } else {
-        log.Printf("User '%s' logged in", username)
-    }
+    log.Printf("User '%s' logged in", user.Username)
     c.JSON(http.StatusOK, gin.H{"token": tokenString})
 }
 
-// Register Admin
 func registerAdmin(c *gin.Context) {
     var input struct {
         Username string `json:"username" binding:"required"`
@@ -383,12 +448,14 @@ func registerAdmin(c *gin.Context) {
         return
     }
 
-    admin := Admin{
-        Username: input.Username,
-        Password: string(passwordHash),
+    admin := User{
+    	Username:   input.Username,
+     	Password:   string(passwordHash),
+       	IsApproved: true,
+        IsAdmin:    true,
     }
     if err := db.Create(&admin).Error; err != nil {
-        c.JSON(http.StatusConflict, gin.H{"error": "Admin username already exists"})
+    	c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
         return
     }
 
@@ -396,7 +463,6 @@ func registerAdmin(c *gin.Context) {
     c.JSON(http.StatusCreated, gin.H{"message": "Admin registered successfully"})
 }
 
-// Approve User
 func approveUser(c *gin.Context) {
     var input struct {
         Username string `json:"username" binding:"required"`
@@ -419,7 +485,26 @@ func approveUser(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"message": "User approved successfully"})
 }
 
-// Get User Status
+func getCurrentPhrase(c *gin.Context) {
+    today := time.Now().Truncate(24 * time.Hour)
+    var phrase Phrase
+    result := db.Where("date = ?", today).First(&phrase)
+    if result.Error != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "No phrase submitted today"})
+        return
+    }
+
+    var submittedBy User
+    db.First(&submittedBy, phrase.SubmittedByID)
+
+    c.JSON(http.StatusOK, gin.H{
+        "phrase": gin.H{
+            "text":        phrase.Text,
+            "submittedBy": submittedBy.Username,
+        },
+    })
+}
+
 func getUserStatus(c *gin.Context) {
     userIDRaw, _ := c.Get("userID")
     userID := userIDRaw.(uint)
@@ -440,7 +525,6 @@ func getUserStatus(c *gin.Context) {
     })
 }
 
-// Submit Phrase
 func submitPhrase(c *gin.Context) {
     if !phraseSubmissionOpen {
         c.JSON(http.StatusForbidden, gin.H{"error": "Phrase submission is not open"})
@@ -483,7 +567,6 @@ func submitPhrase(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"message": "Phrase submitted successfully", "phrase": phrase.Text})
 }
 
-// Confirm Phrase Usage
 func confirmPhraseUsage(c *gin.Context) {
     userIDRaw, _ := c.Get("userID")
     confirmerID := userIDRaw.(uint)
