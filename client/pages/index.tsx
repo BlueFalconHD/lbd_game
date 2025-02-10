@@ -25,6 +25,7 @@ interface User {
 const HomePage = () => {
   // phrase should be able to be set
   const [phrase, setPhrase] = useState<Phrase | null>(null);
+  const [potentialPhrase, setPotentialPhrase] = useState<string>("");
   const [verified, setVerified] = useState<boolean>(false);
   const [verifiedBy, setVerifiedBy] = useState<string>("");
   const [users, setUsers] = useState<User[]>([]);
@@ -116,7 +117,7 @@ const HomePage = () => {
   const submitPhrase = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post("/user/submit_phrase", { text: phrase });
+      await api.post("/user/submit_phrase", { text: potentialPhrase });
       setMessage("Phrase submitted successfully!");
       setError("");
       // Refresh the phrase
@@ -147,7 +148,7 @@ const HomePage = () => {
             )}
           </div>
         ) : (
-          <div>
+          <div className="bg-gray-800 p-6 rounded-lg shadow-md mb-8">
             <p className="text-center text-gray-400">
               No phrase submitted yet. You must be first!
             </p>
@@ -156,12 +157,7 @@ const HomePage = () => {
               <div className="flex items-center space-x-4">
                 <input
                   type="text"
-                  onChange={(e) =>
-                    setPhrase({
-                      text: e.target.value,
-                      submittedBy: user?.username || "",
-                    })
-                  }
+                  onChange={(e) => setPotentialPhrase(e.target.value)}
                   className="flex-grow bg-gray-700 text-gray-100 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
