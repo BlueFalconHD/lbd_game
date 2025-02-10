@@ -23,6 +23,7 @@ interface User {
 }
 
 const HomePage = () => {
+  // phrase should be able to be set
   const [phrase, setPhrase] = useState<Phrase | null>(null);
   const [verified, setVerified] = useState<boolean>(false);
   const [verifiedBy, setVerifiedBy] = useState<string>("");
@@ -112,9 +113,18 @@ const HomePage = () => {
     }
   };
 
-  const handleLogout = () => {
-    Cookies.remove("token");
-    router.push("/login");
+  const submitPhrase = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await api.post("/user/submit_phrase", { text: phrase });
+      setMessage("Phrase submitted successfully!");
+      setError("");
+      // Refresh the phrase
+      fetchPhrase();
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to submit phrase");
+      setMessage("");
+    }
   };
 
   return (
@@ -137,7 +147,33 @@ const HomePage = () => {
             )}
           </div>
         ) : (
-          <p className="text-center text-gray-400">No phrase submitted yet.</p>
+          <div>
+            <p className="text-center text-gray-400">
+              No phrase submitted yet. You must be first!
+            </p>
+
+            <form onSubmit={submitPhrase} className="mb-8">
+              <div className="flex items-center space-x-4">
+                <input
+                  type="text"
+                  onChange={(e) =>
+                    setPhrase({
+                      text: e.target.value,
+                      submittedBy: user?.username || "",
+                    })
+                  }
+                  className="flex-grow bg-gray-700 text-gray-100 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="bg-blue-600 hover:bg-blue-500 transition text-gray-100 px-4 py-2 rounded"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
         )}
 
         <h2 className="text-2xl font-semibold mb-4">Verify a Player</h2>
