@@ -1,5 +1,3 @@
-// main.go
-
 package main
 
 import (
@@ -124,13 +122,23 @@ func main() {
     adminRoutes := router.Group("/admin")
     {
         adminRoutes.Use(authMiddleware(true))
-        adminRoutes.POST("/approve_user", approveUser)
+
         adminRoutes.POST("/register_admin", registerAdmin)
         adminRoutes.GET("/pending_users", getPendingUsers)
+
+        adminRoutes.POST("/edit_phrase", editPhrase)
+        adminRoutes.POST("/reset_game", resetGame)
+
+        adminRoutes.POST("/approve_user", approveUser)
+        adminRoutes.POST("/eliminate_user", eliminateUser)
+        adminRoutes.POST("/resurrect_user", resurrectUser)
+        adminRoutes.POST("/unapprove_user", unapproveUser)
+        adminRoutes.POST("/set_admin", setAdmin)
+        adminRoutes.GET("/detailed_users", getDetailedUsers)
     }
 
     // Start the server
-    router.Run(":8080")
+    router.Run(":8040")
 }
 
 func initLogging() {
@@ -623,4 +631,140 @@ func confirmPhraseUsage(c *gin.Context) {
 
     log.Printf("User '%s' confirmed phrase usage for '%s'", c.GetString("username"), user.Username)
     c.JSON(http.StatusOK, gin.H{"message": "Phrase usage confirmed"})
+}
+
+func editPhrase(c *gin.Context) {
+	var input struct {
+		Text string `json:"text" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	today := time.Now().Truncate(24 * time.Hour)
+	var phrase Phrase
+	result := db.Where("date = ?", today).First(&phrase)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No phrase submitted today"})
+		return
+	}
+
+	phrase.Text = input.Text
+	db.Save(&phrase)
+
+	log.Printf("Phrase edited by admin: %s", phrase.Text)
+	c.JSON(http.StatusOK, gin.H{"message": "Phrase edited successfully"})
+}
+
+func eliminateUser(c *gin.Context) {
+	var input struct {
+		Username string `json:"username" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var user User
+	if err := db.Where("username = ?", input.Username).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	user.IsEliminated = true
+	db.Save(&user)
+
+	log.Printf("User '%s' eliminated by admin", user.Username)
+	c.JSON(http.StatusOK, gin.H{"message": "User eliminated successfully"})
+}
+
+func resetGame(c *gin.Context) {
+	dailyReset()
+	c.JSON(http.StatusOK, gin.H{"message": "Game reset successfully"})
+}
+
+func unapproveUser(c *gin.Context) {
+	var input struct {
+		Username string `json:"username" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var user User
+	if err := db.Where("username = ?", input.Username).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	user.IsApproved = false
+	db.Save(&user)
+
+	log.Printf("User '%s' unapproved by admin", user.Username)
+	c.JSON(http.StatusOK, gin.H{"message": "User unapproved successfully"})
+}
+
+func resurrectUser(c *gin.Context) {
+	var input struct {
+		Username string `json:"username" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var user User
+	if err := db.Where("username = ?", input.Username).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	user.IsEliminated = false
+	db.Save(&user)
+
+	log.Printf("User '%s' resurrected by admin", user.Username)
+	c.JSON(http.StatusOK, gin.H{"message": "User resurrected successfully"})
+}
+
+func setAdmin(c *gin.Context) {
+	var input struct {
+		Username string `json:"username" binding:"required"`
+		Admin   bool   `json:"admin" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var user User
+	if err := db.Where("username = ?", input.Username).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	user.IsAdmin = input.Admin
+	db.Save(&user)
+
+	log.Printf("User '%s' promoted to admin by admin", user.Username)
+	c.JSON(http.StatusOK, gin.H{"message": "User promoted to admin successfully"})
+}
+
+func getDetailedUsers(c *gin.Context) {
+	var users []User
+	db.Find(&users)
+
+	var userList []gin.H
+	for _, user := range users {
+		userList = append(userList, gin.H{
+			"id":          user.ID,
+			"username":    user.Username,
+			"is_approved": user.IsApproved,
+			"is_eliminated": user.IsEliminated,
+			"is_admin":    user.IsAdmin,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"users": userList})
 }
