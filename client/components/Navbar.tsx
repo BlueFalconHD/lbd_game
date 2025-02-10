@@ -1,5 +1,3 @@
-// components/Navbar.tsx
-
 import { useContext } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import Link from "next/link";

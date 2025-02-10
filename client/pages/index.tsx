@@ -1,5 +1,3 @@
-// pages/index.tsx
-
 import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import Cookies from "js-cookie";

@@ -1,5 +1,3 @@
-// pages/admin/index.tsx
-
 import { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useRouter } from "next/router";

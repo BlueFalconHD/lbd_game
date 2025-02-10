@@ -1,5 +1,3 @@
-// context/AuthContext.tsx
-
 import { createContext, useState, useEffect, ReactNode } from "react";
 import Cookies from "js-cookie";
 
