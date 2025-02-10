@@ -1,8 +1,8 @@
 import axios from "axios";
 import Cookies from "js-cookie";
-import { env } from "process";
 
-const API_URL = env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// get from env API_URL
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const api = axios.create({
   baseURL: API_URL,
