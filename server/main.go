@@ -77,6 +77,14 @@ func main() {
     jwtKey = []byte(os.Getenv("JWT_SECRET"))
     frontendURL := os.Getenv("FRONTEND_URL")
 
+    if jwtKey == nil {
+    	log.Fatal("JWT_SECRET environment variable not set")
+    }
+
+    if frontendURL == "" {
+    	log.Fatal("FRONTEND_URL environment variable not set")
+    }
+
     // Initialize the database and schedule submission time
     initDatabase()
     schedulePhraseSubmission()
