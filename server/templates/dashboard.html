@@ -1,0 +1,38 @@
+{{ define "title" }}Dashboard | LBD Game{{ end }} {{ define "content" }}
+<div class="container">
+    <h1>Welcome, {{ .Username }}</h1>
+    {{ if .IsEliminated }}
+    <p>You have been eliminated from the game.</p>
+    {{ else }}
+    <p>Your current status:</p>
+    <ul>
+        <li>Phrase for today: "{{ .Phrase }}"</li>
+        <li>
+            Submission window is {{ if .SubmissionOpen }}open{{ else }}closed{{
+            end }}.
+        </li>
+        <li>
+            You are {{ if .IsEliminated }}eliminated{{ else }}still in the
+            game{{ end }}.
+        </li>
+    </ul>
+    {{ if .SubmissionOpen }}
+    <h2>Submit Today's Phrase</h2>
+    <form action="/submit_phrase" method="post">
+        <label for="text">Phrase:</label>
+        <input type="text" id="text" name="text" required />
+        <button type="submit">Submit Phrase</button>
+    </form>
+    {{ end }}
+    <h2>Confirm Phrase Usage</h2>
+    <form action="/confirm_usage" method="post">
+        <label for="username">Username to confirm:</label>
+        <input type="text" id="username" name="username" required />
+        <button type="submit">Confirm Usage</button>
+    </form>
+    {{ end }}
+    <form action="/logout" method="post">
+        <button type="submit">Logout</button>
+    </form>
+</div>
+{{ end }}
