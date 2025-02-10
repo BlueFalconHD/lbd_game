@@ -47,7 +47,7 @@ const AdminDashboard = () => {
         {message && <p className="text-green-400 mb-4">{message}</p>}
         {error && <p className="text-red-400 mb-4">{error}</p>}
         <h2 className="text-2xl font-semibold mb-4">Pending Users</h2>
-        {users.length > 0 ? (
+        {users ? (
           <ul className="space-y-2">
             {users.map((u) => (
               <li

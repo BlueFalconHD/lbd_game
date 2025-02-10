@@ -152,7 +152,7 @@ const HomePage = () => {
               className="flex-grow bg-gray-700 text-gray-100 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select a player</option>
-              {users
+              {(users || [])
                 .filter((u) => u.username !== user?.username)
                 .map((u) => (
                   <option key={u.username} value={u.username}>
@@ -170,7 +170,7 @@ const HomePage = () => {
         </form>
 
         <h2 className="text-2xl font-semibold mb-4">Verifications Today</h2>
-        {verifications.length > 0 ? (
+        {verifications ? (
           <ul className="space-y-2">
             {verifications.map((v) => (
               <li
