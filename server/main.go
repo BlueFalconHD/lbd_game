@@ -16,13 +16,14 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"github.com/gin-contrib/cors"
- 	// "encoding/base64"
 
+	// to read from .env file
+	"github.com/joho/godotenv"
 )
 
 var (
     db                     *gorm.DB
-    jwtKey                 = []byte("your_secret_key") // Change this to a secure key
+    jwtKey                 = []byte("")
     phraseSubmissionOpen   bool
     phraseSubmissionTime   time.Time
     currentPhrase          Phrase
@@ -39,12 +40,6 @@ type User struct {
     IsEliminated bool   `gorm:"default:false"`
     IsAdmin	    bool   `gorm:"default:false"`
 }
-
-// type Admin struct {
-//     ID       uint   `gorm:"primaryKey"`
-//     Username string `gorm:"unique;not null"`
-//     Password string `gorm:"not null"`
-// }
 
 type Phrase struct {
     ID            uint      `gorm:"primaryKey"`
@@ -72,6 +67,16 @@ func main() {
     initLogging()
     defer logFile.Close()
 
+    // Load environment variables
+    err := godotenv.Load()
+    if err != nil {
+    	log.Println("Failed to load .env file")
+     	panic(err)
+    }
+
+    jwtKey = []byte(os.Getenv("JWT_SECRET"))
+    frontendURL := os.Getenv("FRONTEND_URL")
+
     // Initialize the database and schedule submission time
     initDatabase()
     schedulePhraseSubmission()
@@ -81,7 +86,7 @@ func main() {
 
     // CORS configuration
     config := cors.Config{
-        AllowOrigins:     []string{"http://localhost:3000"}, // Frontend origin
+        AllowOrigins:     []string{frontendURL},
         AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
         AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
         ExposeHeaders:    []string{"Content-Length"},
@@ -140,18 +145,18 @@ func initDatabase() {
     db.AutoMigrate(&User{}, &Phrase{}, &PhraseUsage{})
 
     // Create default admin if not exists
-    var admin User
-    if err := db.Where("username = ?", "admin").First(&admin).Error; err != nil {
-        passwordHash, _ := bcrypt.GenerateFromPassword([]byte("adminpass"), bcrypt.DefaultCost)
-        admin = User{
-            Username:   "admin",
-            Password:   string(passwordHash),
-            IsApproved: true,
-            IsAdmin:    true,
-        }
-        db.Create(&admin)
-        log.Println("Default admin created with username 'admin' and password 'adminpass'")
-    }
+    // var admin User
+    // if err := db.Where("username = ?", "admin").First(&admin).Error; err != nil {
+    //     passwordHash, _ := bcrypt.GenerateFromPassword([]byte("adminpass"), bcrypt.DefaultCost)
+    //     admin = User{
+    //         Username:   "admin",
+    //         Password:   string(passwordHash),
+    //         IsApproved: true,
+    //         IsAdmin:    true,
+    //     }
+    //     db.Create(&admin)
+    //     log.Println("Default admin created with username 'admin' and password 'adminpass'")
+    // }
 }
 
 func schedulePhraseSubmission() {
