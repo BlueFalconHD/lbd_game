@@ -153,7 +153,7 @@ const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {allUsers.map((user) => (
+              {(allUsers || []).map((user) => (
                 <tr key={user.id} className="border-b border-gray-700">
                   <td className="p-3">
                     <span className="font-medium">{user.username}</span>
@@ -230,7 +230,7 @@ const AdminDashboard = () => {
         </div>
 
         <h2 className="text-2xl font-semibold mb-4">Pending Users</h2>
-        {pendingUsers.length > 0 ? (
+        {pendingUsers ? (
           <ul className="space-y-2">
             {pendingUsers.map((u) => (
               <li
