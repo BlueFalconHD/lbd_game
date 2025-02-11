@@ -21,6 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const token = Cookies.get("token");
     if (token) {
       // Decode token to check if user is admin
+      // If token is valid, set isAuthenticated to true
       const payload = JSON.parse(
         Buffer.from(token.split(".")[1], "base64").toString(),
       );

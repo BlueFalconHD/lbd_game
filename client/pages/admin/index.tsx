@@ -146,6 +146,19 @@ const AdminDashboard = () => {
     }
   };
 
+  const submitEditPhrase = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = e.target.text.value;
+    try {
+      await api.post("/admin/edit_phrase", { text });
+      setMessage("Phrase updated");
+      setError("");
+    } catch (err: any) {
+      setError("Failed to update phrase");
+      setMessage("");
+    }
+  };
+
   return (
     <Layout>
       <div className="max-w-5xl mx-auto">
@@ -170,10 +183,8 @@ const AdminDashboard = () => {
 
           <h2 className="text-2xl font-semibold mb-4">Edit Phrase</h2>
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              editPhrase(e.target.text.value);
-            }}
+            onSubmit={submitEditPhrase}
+            className="flex items-center space-x-4"
           >
             <input
               type="text"
