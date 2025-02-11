@@ -11,13 +11,13 @@ import Layout from "@/components/Layout";
 // post admin/set_admin {username: String, admin: Boolean}
 // post admin/edit_phrase {text: String}
 // post admin/reset_game
-// get admin/detailed_users -> {
+// get admin/detailed_users -> {users: [{
 // 	"id":          Number,
 // 	"username":    String,
 // 	"is_approved": Boolean,
 // 	"is_eliminated": Boolean,
 // 	"is_admin":    Boolean,
-// }
+// }]}
 
 const AdminDashboard = () => {
   const [pendingUsers, setPendingUsers] = useState<{ username: string }[]>([]);
@@ -41,7 +41,7 @@ const AdminDashboard = () => {
         api.get("/admin/detailed_users"),
       ]);
       setPendingUsers(pendingResponse.data.users);
-      setAllUsers(detailedResponse.data);
+      setAllUsers(detailedResponse.data.users);
     } catch (err: any) {
       setError("Failed to fetch users");
       if (err.response?.status === 401) {
