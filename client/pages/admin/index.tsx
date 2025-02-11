@@ -32,6 +32,7 @@ const AdminDashboard = () => {
   >([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [potentialPhrase, setPotentialPhrase] = useState<string>("");
   const router = useRouter();
 
   const fetchAllData = async () => {
@@ -148,9 +149,8 @@ const AdminDashboard = () => {
 
   const submitEditPhrase = async (e: React.FormEvent) => {
     e.preventDefault();
-    const text = e.target.text.value;
     try {
-      await api.post("/admin/edit_phrase", { text });
+      await api.post("/admin/edit_phrase", { text: potentialPhrase });
       setMessage("Phrase updated");
       setError("");
     } catch (err: any) {
@@ -190,6 +190,7 @@ const AdminDashboard = () => {
               type="text"
               name="text"
               className="bg-gray-700 text-gray-100 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => setPotentialPhrase(e.target.value)}
               required
             />
             <button
