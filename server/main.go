@@ -17,6 +17,9 @@ import (
 
 	// to read from .env file
 	"github.com/joho/godotenv"
+
+	// to read yaml file
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -28,6 +31,7 @@ var (
     dailyResetScheduled    bool
     totalUsers             int
     logFile                *os.File
+    timezone *time.Location
 )
 
 type User struct {
@@ -61,6 +65,15 @@ type Claims struct {
     jwt.StandardClaims
 }
 
+// yaml for cors.yaml
+// origins:
+//  - http://localhost:3000
+//  - ...
+
+type CorsConfig struct {
+	Origins []string `yaml:"origins"`
+}
+
 func main() {
     initLogging()
     defer logFile.Close()
@@ -83,6 +96,26 @@ func main() {
     	log.Fatal("FRONTEND_URL environment variable not set")
     }
 
+    timezone, err = time.LoadLocation("America/Chicago")
+    if err != nil {
+        log.Fatal("Failed to load timezone:", err)
+    }
+
+    // Read cors.yaml file
+    file, err := os.Open("cors.yaml")
+    if err != nil {
+    	log.Fatal("Failed to open cors.yaml file:", err)
+    }
+
+    defer file.Close()
+
+    decoder := yaml.NewDecoder(file)
+    var corsConfig CorsConfig
+    err = decoder.Decode(&corsConfig)
+    if err != nil {
+    	log.Fatal("Failed to decode cors.yaml file:", err)
+    }
+
     // Initialize the database and schedule submission time
     initDatabase()
     schedulePhraseSubmission()
@@ -92,7 +125,7 @@ func main() {
 
     // CORS configuration
     config := cors.Config{
-        AllowOrigins:     []string{frontendURL},
+        AllowOrigins:     corsConfig.Origins,
         AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
         AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
         ExposeHeaders:    []string{"Content-Length"},
@@ -177,13 +210,12 @@ func initDatabase() {
 }
 
 func schedulePhraseSubmission() {
-    now := time.Now()
+    now := time.Now().In(timezone)
     year, month, day := now.Date()
-    location := now.Location()
 
     // Define the time window
-    startTime := time.Date(year, month, day, 4, 30, 0, 0, location)
-    endTime := time.Date(year, month, day, 8, 20, 0, 0, location)
+    startTime := time.Date(year, month, day, 4, 30, 0, 0, timezone)
+    endTime := time.Date(year, month, day, 8, 20, 0, 0, timezone)
 
     // Random time within the window
     rand.Seed(time.Now().UnixNano())
@@ -212,7 +244,7 @@ func dailyReset() {
     log.Println("Performing daily reset")
 
     // Elimination logic
-    today := time.Now().Truncate(24 * time.Hour)
+    today := time.Now().In(timezone).Truncate(24 * time.Hour)
     var users []User
     db.Where("is_eliminated = ? AND is_approved = ?", false, true).Find(&users)
     var activeUsers int
@@ -330,7 +362,7 @@ func getTodaysVerifications(c *gin.Context) {
 func getVerificationStatus(c *gin.Context) {
     userIDRaw, _ := c.Get("userID")
     userID := userIDRaw.(uint)
-    today := time.Now().Truncate(24 * time.Hour)
+    today := time.Now().In(timezone).Truncate(24 * time.Hour)
 
     var usage PhraseUsage
     result := db.Where("user_id = ? AND date = ?", userID, today).First(&usage)
@@ -508,7 +540,7 @@ func approveUser(c *gin.Context) {
 }
 
 func getCurrentPhrase(c *gin.Context) {
-    today := time.Now().Truncate(24 * time.Hour)
+    today := time.Now().In(timezone).Truncate(24 * time.Hour)
     var phrase Phrase
     result := db.Where("date = ?", today).First(&phrase)
     if result.Error != nil {
@@ -573,6 +605,13 @@ func submitPhrase(c *gin.Context) {
         return
     }
 
+    // Check if the phrase is empty/just whitespace
+    if len(input.Text) == 0 || len(input.Text) != len(input.Text) {
+    	c.JSON(http.StatusBadRequest, gin.H{"error": "Phrase cannot be empty or just whitespace"})
+     		return
+    }
+
+
     phrase := Phrase{
         Date:          today,
         Text:          input.Text,
@@ -615,7 +654,7 @@ func confirmPhraseUsage(c *gin.Context) {
     }
 
     // Check if already confirmed today
-    today := time.Now().Truncate(24 * time.Hour)
+    today := time.Now().In(timezone).Truncate(24 * time.Hour)
     var existingUsage PhraseUsage
     result := db.Where("user_id = ? AND date = ?", user.ID, today).First(&existingUsage)
     if result.Error == nil {
@@ -643,7 +682,7 @@ func editPhrase(c *gin.Context) {
 		return
 	}
 
-	today := time.Now().Truncate(24 * time.Hour)
+	today := time.Now().In(timezone).Truncate(24 * time.Hour)
 	var phrase Phrase
 	result := db.Where("date = ?", today).First(&phrase)
 	if result.Error != nil {

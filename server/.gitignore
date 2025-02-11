@@ -30,3 +30,4 @@ server
 lbd_game.db
 lbd_game.log
 .env
+cors.yaml
