@@ -88,6 +88,17 @@ const AdminDashboard = () => {
     }
   };
 
+  const openSubmission = async () => {
+    try {
+      await api.post("/admin/open_submission");
+      setMessage("Submission opened");
+      setError("");
+    } catch (err: any) {
+      setError("Failed to open submission");
+      setMessage("");
+    }
+  };
+
   const eliminateUser = async (username: string) => {
     try {
       await api.post("/admin/eliminate_user", { username });
@@ -141,6 +152,43 @@ const AdminDashboard = () => {
         <h1 className="text-3xl font-bold mb-6 text-center">Admin Dashboard</h1>
         {message && <p className="text-green-400 mb-4">{message}</p>}
         {error && <p className="text-red-400 mb-4">{error}</p>}
+
+        <h2 className="text-2xl font-semibold mb-4">Game Controls</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={resetGame}
+            className="bg-red-600 hover:bg-red-500 px-2 py-1 rounded text-sm"
+          >
+            Reset Game
+          </button>
+          <button
+            onClick={openSubmission}
+            className="bg-blue-600 hover:bg-blue-500 px-2 py-1 rounded text-sm"
+          >
+            Open Submission
+          </button>
+
+          <h2 className="text-2xl font-semibold mb-4">Edit Phrase</h2>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              editPhrase(e.target.text.value);
+            }}
+          >
+            <input
+              type="text"
+              name="text"
+              className="bg-gray-700 text-gray-100 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-500 px-2 py-1 rounded text-sm"
+            >
+              Update Phrase
+            </button>
+          </form>
+        </div>
 
         <h2 className="text-2xl font-semibold mb-4">All Users</h2>
         <div className="overflow-x-auto">

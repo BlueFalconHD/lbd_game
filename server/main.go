@@ -127,6 +127,7 @@ func main() {
         adminRoutes.GET("/pending_users", getPendingUsers)
 
         adminRoutes.POST("/edit_phrase", editPhrase)
+        adminRoutes.POST("/open_submission", openSubmission)
         adminRoutes.POST("/reset_game", resetGame)
 
         adminRoutes.POST("/approve_user", approveUser)
@@ -747,8 +748,8 @@ func setAdmin(c *gin.Context) {
 	user.IsAdmin = input.Admin
 	db.Save(&user)
 
-	log.Printf("User '%s' promoted to admin by admin", user.Username)
-	c.JSON(http.StatusOK, gin.H{"message": "User promoted to admin successfully"})
+	log.Printf("User '%s' %s to %s by admin", user.Username, map[bool]string{true: "promoted", false: "demoted"}[input.Admin], map[bool]string{true: "admin", false: "user"}[input.Admin])
+	c.JSON(http.StatusOK, gin.H{"message": "User admin status updated successfully"})
 }
 
 func getDetailedUsers(c *gin.Context) {
@@ -767,4 +768,12 @@ func getDetailedUsers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"users": userList})
+}
+
+func openSubmission(c *gin.Context) {
+	phraseSubmissionOpen = true
+	currentPhrase = Phrase{}
+
+	log.Println("Phrase submission opened by admin")
+	c.JSON(http.StatusOK, gin.H{"message": "Phrase submission opened"})
 }
