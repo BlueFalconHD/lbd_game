@@ -27,7 +27,7 @@ go.work
 # End of https://www.toptal.com/developers/gitignore/api/go
 
 server
-lbd_game.db
-lbd_game.log
+tmp/
+*.db
+*.log
 .env
-cors.yaml

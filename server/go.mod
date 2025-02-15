@@ -1,12 +1,13 @@
-module server
+module github.com/bluefalconhd/lbd_game/server
 
-go 1.22.4
+go 1.23
 
 require (
 	github.com/gin-contrib/cors v1.7.3
 	github.com/gin-gonic/gin v1.10.0
 	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/joho/godotenv v1.5.1
+	github.com/robfig/cron/v3 v3.0.1
 	golang.org/x/crypto v0.33.0
 	gorm.io/driver/sqlite v1.5.7
 	gorm.io/gorm v1.25.12
