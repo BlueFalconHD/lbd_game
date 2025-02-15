@@ -34,7 +34,7 @@ func SetupRouter(cfg config.Config) *gin.Engine {
 	protected := router.Group("/")
 	protected.Use(middleware.AuthMiddleware())
 	{
-		protected.GET("/privelege", controllers.Privelege)
+		// protected.GET("/privelege", controllers.Privelege)
 		protected.POST("/phrase", controllers.SubmitPhrase)
 		protected.GET("/can_submit_phrase", controllers.CanSubmitPhrase)
 		protected.POST("/verify", controllers.VerifyUser)
@@ -44,9 +44,7 @@ func SetupRouter(cfg config.Config) *gin.Engine {
 
 	// Admin routes
 	admin := protected.Group("/admin")
-	//FIXME: add back admin check
-	// admin.Use(middleware.PrivilegeMiddleware(1)) // Requires at least Admin Level 1
-	protected.Use(middleware.AuthMiddleware())
+	admin.Use(middleware.PrivilegeMiddleware(1)) // Requires at least Admin Level 1
 	{
 		admin.GET("/stats/users", controllers.GetUserStatistics)
 		// admin.PUT("/user/:id/resurrect", controllers.ResurrectUser)
@@ -59,9 +57,7 @@ func SetupRouter(cfg config.Config) *gin.Engine {
 
 	// Super Admin routes
 	superAdmin := protected.Group("/superadmin")
-	//FIXME: add back superadmin check
-	// superAdmin.Use(middleware.PrivilegeMiddleware(2)) // Requires Admin Level 2
-	protected.Use(middleware.AuthMiddleware())
+	superAdmin.Use(middleware.PrivilegeMiddleware(2)) // Requires Admin Level 2
 	{
 		superAdmin.PUT("/user/:id/promote", controllers.PromoteUser)
 		superAdmin.PUT("/user/:id/demote", controllers.DemoteUser)

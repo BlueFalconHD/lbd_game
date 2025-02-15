@@ -10,8 +10,9 @@ var (
 )
 
 type Config struct {
-	JWTSecret   string
-	CorsOrigins []string
+	JWTSecret    string
+	CorsOrigins  []string
+	CookieDomain string
 }
 
 func LoadConfig() Config {
@@ -39,7 +40,12 @@ func LoadConfig() Config {
 	}
 
 	return Config{
-		JWTSecret:   os.Getenv("JWT_SECRET"),
-		CorsOrigins: origins,
+		JWTSecret:    os.Getenv("JWT_SECRET"),
+		CorsOrigins:  origins,
+		CookieDomain: os.Getenv("COOKIE_DOMAIN"),
 	}
+}
+
+func GetConfig() Config {
+	return cfg
 }

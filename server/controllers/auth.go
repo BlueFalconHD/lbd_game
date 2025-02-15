@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 
+	"github.com/bluefalconhd/lbd_game/server/config"
 	"github.com/bluefalconhd/lbd_game/server/database"
 	"github.com/bluefalconhd/lbd_game/server/models"
 	"github.com/bluefalconhd/lbd_game/server/utils"
@@ -68,8 +69,8 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("token", token, 3600*24, "/", "", false, false)
-	c.SetSameSite(http.SameSiteNoneMode) // since server and site are different domains
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie("token", token, 3600*24, "/", config.GetConfig().CookieDomain, false, false)
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 }
 
