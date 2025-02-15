@@ -53,10 +53,15 @@ export function LoginForm({
           result.error || "An unknown error occurred. Please try again later.",
         );
         setIsLoading(false);
-      } else if (!result.data) {
-        setError("An unknown error occurred. Please try again later.");
-        setIsLoading(false);
       } else {
+        if (!result.data?.token) {
+          setError(
+            "An error occurred. Please try again later or email hdombroski28@[school email domain]. Code: no_token_in_response",
+          );
+          setIsLoading(false);
+          return;
+        }
+
         SetToken(result.data?.token);
         processLogin();
         setIsLoading(false);
