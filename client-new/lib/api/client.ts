@@ -1,5 +1,6 @@
 import axios from "axios";
 import Cookies from "js-cookie";
+import { GetToken } from "../auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8040";
 
@@ -19,9 +20,9 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    const token = Cookies.get("token");
+    const token = GetToken();
     if (token && config.headers) {
-      config.headers["Authorization"] = token;
+      config.headers["Authorization"] = `Bearer ${token}`;
     }
     return config;
   },

@@ -3,7 +3,6 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/bluefalconhd/lbd_game/server/config"
 	"github.com/bluefalconhd/lbd_game/server/database"
 	"github.com/bluefalconhd/lbd_game/server/models"
 	"github.com/bluefalconhd/lbd_game/server/utils"
@@ -69,9 +68,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	c.SetSameSite(http.SameSiteNoneMode)
-	c.SetCookie("token", token, 3600*24, "/", config.GetConfig().CookieDomain, true, false)
-	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "token": token})
 }
 
 // Get privelege of user

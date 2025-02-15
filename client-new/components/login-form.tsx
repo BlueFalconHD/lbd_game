@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { login } from "@/lib/api/auth";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircleIcon, Loader2 } from "lucide-react";
+import { SetToken } from "@/lib/auth";
 
 export function LoginForm({
   className,
@@ -48,9 +49,15 @@ export function LoginForm({
       const result = await login({ username: username, password: password });
 
       if (result.error) {
-        setError(result.error);
+        setError(
+          result.error || "An unknown error occurred. Please try again later.",
+        );
+        setIsLoading(false);
+      } else if (!result.data) {
+        setError("An unknown error occurred. Please try again later.");
         setIsLoading(false);
       } else {
+        SetToken(result.data?.token);
         processLogin();
         setIsLoading(false);
         router.push("/");

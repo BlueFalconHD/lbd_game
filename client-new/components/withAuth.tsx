@@ -2,25 +2,25 @@ import { useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "@/contexts/AuthContext";
 import Cookies from "js-cookie";
+import { GetToken } from "@/lib/auth";
 
 const withAuth = (WrappedComponent: any, requirePrivilege: number = 0) => {
   const RequiresAuthentication = (props: any) => {
     const { isAuthenticated, privilege } = useContext(AuthContext);
     const router = useRouter();
-    const [loading, setLoading] = useState(true); // Add this
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-      const token = Cookies.get("token");
+      const token = GetToken();
       if (!token) {
         console.log("No token saved");
         router.push("/login");
       }
-      setLoading(false); // Add this
+      setLoading(false);
     }, []);
 
     useEffect(() => {
       if (!loading && requirePrivilege > privilege) {
-        // Add loading check
         console.log("Insufficient privilege");
         router.push("/");
       }

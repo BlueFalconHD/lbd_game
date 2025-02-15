@@ -5,6 +5,7 @@ import { decodeToken } from "@/lib/utils/token";
 import { getCookie, deleteCookie } from "@/lib/utils/cookies";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import { DeleteToken, GetToken } from "@/lib/auth";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -25,7 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [privilege, setPrivilege] = useState<number>(0);
 
   useEffect(() => {
-    const token = Cookies.get("token");
+    const token = GetToken();
     if (token) {
       const payload = JSON.parse(
         Buffer.from(token.split(".")[1], "base64").toString(),
@@ -40,13 +41,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const logout = () => {
-    deleteCookie("token");
+    DeleteToken();
     setPrivilege(0);
     setIsAuthenticated(false);
   };
 
   const processLogin = () => {
-    const token = Cookies.get("token");
+    const token = GetToken();
     if (token) {
       const payload = JSON.parse(
         Buffer.from(token.split(".")[1], "base64").toString(),
