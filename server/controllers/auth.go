@@ -69,6 +69,7 @@ func Login(c *gin.Context) {
 	}
 
 	c.SetCookie("token", token, 3600*24, "/", "", false, false)
+	c.SetSameSite(http.SameSiteNoneMode) // since server and site are different domains
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 }
 
