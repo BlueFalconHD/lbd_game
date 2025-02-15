@@ -130,8 +130,11 @@ export function PhraseDisplay({ ...props }) {
             submitting={submitting}
           />
         ) : (
-          <div className="flex justify-center items-center min-h-[200px]">
+          <div className="flex flex-col justify-center items-center min-h-[200px] space-y-4">
             <Loader2 className="animate-spin h-8 w-8" />
+            <p className="text-sm text-muted-foreground">
+              No submission window is open.
+            </p>
           </div>
         )}
       </div>

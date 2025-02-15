@@ -1,23 +1,28 @@
 "use client";
 
-import Image from "next/image";
 import WithAuth from "@/components/withAuth";
-import { getCurrentPhrase } from "@/lib/api/phrase";
-import { useState } from "react";
-import { AuthContext, AuthProvider } from "@/contexts/AuthContext";
+import { useContext, useState } from "react";
+import { AuthContext } from "@/contexts/AuthContext";
 import { PhraseDisplay } from "@/components/phrase-display";
-import PickUser from "@/components/verify-usage/pick-user";
 import { Verifications } from "@/components/verifications";
+import { Button } from "@/components/ui/button";
 
 const Home = () => {
   const [error, setError] = useState<string | null>(null);
+  const { logout } = useContext(AuthContext);
 
-  // font-[family-name:var(--font-geist-sans)]"
-
+  // logout button at top right
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen max-w-screen gap-8">
-      <PhraseDisplay />
-      <Verifications />
+    <div className="relative min-h-screen max-w-screen">
+      <div className="absolute top-0 right-0 p-4">
+        <Button onClick={logout} variant="link">
+          Log Out
+        </Button>
+      </div>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-8">
+        <PhraseDisplay />
+        <Verifications />
+      </div>
     </div>
   );
 };

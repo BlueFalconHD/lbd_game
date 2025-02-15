@@ -71,8 +71,7 @@ func Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "token": token})
 }
 
-// Get privelege of user
-func Privelege(c *gin.Context) {
+func Privilege(c *gin.Context) {
 	var user models.User
 	userID := c.Param("id")
 

@@ -7,7 +7,7 @@ interface VerifiedUsersProps {
 
 export function VerifiedUsers({ verifications }: VerifiedUsersProps) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-1 min-w-[100%] md:min-w-[100%] mx-auto">
       {verifications.map((verification) => (
         <Verification
           key={verification.verification_id}

@@ -22,7 +22,7 @@ export function Verifications() {
   useInterval(fetchVerifications, 10000);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 flex flex-col items-center">
       <PickUser />
       <VerifiedUsers verifications={verifications} />
     </div>

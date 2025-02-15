@@ -34,7 +34,7 @@ func SetupRouter(cfg config.Config) *gin.Engine {
 	protected := router.Group("/")
 	protected.Use(middleware.AuthMiddleware())
 	{
-		// protected.GET("/privelege", controllers.Privelege)
+		protected.GET("/privilege", controllers.Privilege)
 		protected.POST("/phrase", controllers.SubmitPhrase)
 		protected.GET("/can_submit_phrase", controllers.CanSubmitPhrase)
 		protected.POST("/verify", controllers.VerifyUser)

@@ -27,11 +27,6 @@ function CurrentPhrase({
       <p className="text-sm text-muted-foreground">
         Submitted by: {submittedBy}
       </p>
-      {nextOpenTime && (
-        <p className="text-sm text-muted-foreground">
-          Next window opens at: {new Date(nextOpenTime).toLocaleString()}
-        </p>
-      )}
       {privilege > 0 && (
         <div className="flex justify-center items-center gap-2">
           <div className="flex gap-2">
