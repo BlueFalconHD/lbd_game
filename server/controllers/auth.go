@@ -70,7 +70,7 @@ func Login(c *gin.Context) {
 	}
 
 	c.SetSameSite(http.SameSiteNoneMode)
-	c.SetCookie("token", token, 3600*24, "/", config.GetConfig().CookieDomain, false, false)
+	c.SetCookie("token", token, 3600*24, "/", config.GetConfig().CookieDomain, true, false)
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 }
 
