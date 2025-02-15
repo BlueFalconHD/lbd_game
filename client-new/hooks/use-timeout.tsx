@@ -1,14 +1,14 @@
 import { useEffect, useRef } from "react";
 
-const useTimeout = (fn: () => void, delay: number | null) => {
-  const fnRef = useRef<() => void>(null);
+const useTimeout = (fn: () => void, delay: number | undefined) => {
+  const fnRef = useRef<() => void>(fn);
 
   useEffect(() => {
     fnRef.current = fn;
   }, [fn]);
 
   useEffect(() => {
-    if (delay === null) return;
+    if (delay === undefined) return;
 
     const handle = setTimeout(() => {
       if (fnRef.current) {
