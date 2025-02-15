@@ -54,7 +54,7 @@ export function LoginForm({
         );
         setIsLoading(false);
       } else {
-        if (!result.data?.token) {
+        if (!result.token) {
           setError(
             "An error occurred. Please try again later or email hdombroski28@[school email domain]. Code: no_token_in_response",
           );
@@ -62,7 +62,7 @@ export function LoginForm({
           return;
         }
 
-        SetToken(result.data?.token);
+        SetToken(result.token);
         processLogin();
         setIsLoading(false);
         router.push("/");
