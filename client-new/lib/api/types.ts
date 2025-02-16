@@ -68,3 +68,14 @@ export interface ApiResponse<T> {
   data?: T;
   [key: string]: any;
 }
+
+export interface WebSocketMessage<T> {
+  event: string;
+  data: T;
+}
+
+export const trigger_update = "trigger_update";
+
+export interface UpdateTriggerMessageData {
+  type: string;
+}
