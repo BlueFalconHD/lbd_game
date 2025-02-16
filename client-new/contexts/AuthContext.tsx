@@ -34,6 +34,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log(payload);
       setPrivilege(payload.privilege);
       setIsAuthenticated(true);
+
+      // exp property in payload is unix timestamp
+      // check if token is expired, if so, logout
+      if (payload.exp < Math.floor(Date.now() / 1000)) {
+        logout();
+      }
     } else {
       setIsAuthenticated(false);
       setPrivilege(0);
